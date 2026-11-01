@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & model checkpoints (large files)
+*.duckdb.wal
+*.duckdb.tmp
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

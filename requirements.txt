@@ -1,0 +1,33 @@
+# Core Runtime & Web Frameworks
+streamlit>=1.35.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.7.0
+pyyaml>=6.0.1
+requests>=2.31.0
+httpx>=0.27.0
+
+# Data Engineering & Lakehouse
+duckdb>=1.0.0
+polars>=1.0.0
+pyarrow>=15.0.0
+pandas>=2.2.0
+numpy>=1.26.0
+
+# Streaming & Messaging (Kafka / Redpanda)
+confluent-kafka>=2.3.0
+
+# Machine Learning & MLOps
+scikit-learn>=1.4.0
+lightgbm>=4.3.0
+xgboost>=2.0.0
+shap>=0.45.0
+scipy>=1.12.0
+joblib>=1.3.2
+
+# Observability
+prometheus-client>=0.20.0
+
+# Testing & Quality Assurance
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

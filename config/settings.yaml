@@ -1,0 +1,50 @@
+# AETHER-DC Global Configuration & Operational Thresholds
+
+app:
+  name: "AETHER-DC (GreenOps AI)"
+  version: "2.4.0"
+  environment: "production"
+  default_active_model: "champion_lgbm"
+
+thresholds:
+  psi:
+    stable: 0.10
+    warning: 0.20
+    critical: 0.25
+  temperature_celsius:
+    ashrae_recommended: 27.0
+    ashrae_allowable_max: 32.0
+    thermal_spike_critical: 42.0
+    absolute_physical_max: 65.0
+    absolute_physical_min: 10.0
+  pue:
+    ideal_target: 1.15
+    allowable_target: 1.25
+    degraded_warning: 1.45
+    critical_spike: 1.70
+  power_kw:
+    rack_max: 120.0
+    rack_min: 0.5
+  cooling_efficiency:
+    min_nominal: 0.55
+    critical_degradation: 0.35
+
+lakehouse:
+  duckdb_path: "data/lakehouse/aether_dc.duckdb"
+  raw_dataset_path: "data/raw/green_ai_telemetry.parquet"
+  models_dir: "data/models"
+  rolling_windows:
+    short_periods: 6
+    long_periods: 12
+    eval_periods: 200
+
+kafka:
+  bootstrap_servers: "localhost:9092"
+  raw_topic: "dc.telemetry.raw"
+  dlq_topic: "dc.telemetry.dlq"
+  metrics_topic: "dc.mlops.metrics"
+  consumer_group: "aether-medallion-lakehouse"
+
+copilot:
+  default_confidence: 0.94
+  counterfactual_pue_reduction_factor: 0.82
