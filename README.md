@@ -1,5 +1,6 @@
 # AETHER-DC (`AETHER-DC-GreenOps-AI`)
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aether-dc-greenops-ai.streamlit.app/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.35.0-FF4B4B.svg?logo=streamlit)](https://streamlit.io/)
@@ -11,7 +12,7 @@
 
 > **Autonomous Green AI Data Center Telemetry, Streaming Medallion Lakehouse & Self-Healing MLOps Platform**  
 > Architected and engineered by **[Maheza Novrayuda](https://github.com/MAHEZANOVRAYUDA)**.  
-> Complements the flagship portfolio series alongside [telco-retention-decision-engine](https://github.com/MAHEZANOVRAYUDA/telco-retention-decision-engine) and [apexfin-ai](https://github.com/MAHEZANOVRAYUDA/apexfin-ai).
+> 🌐 **Live Interactive Production System**: [https://aether-dc-greenops-ai.streamlit.app/](https://aether-dc-greenops-ai.streamlit.app/)
 
 ---
 
@@ -324,7 +325,13 @@ When deployed in production mode, FastAPI exposes a high-performance REST and Pr
 
 ## 8. Quickstart & Deployment Guide
 
-### Option 1: 1-Click Streamlit Cloud / Local Python (Zero-Dependency)
+### Option 1: Live Cloud Deployment & Local Python (Zero-Dependency)
+
+**Live Interactive Application**:  
+Access the production application directly on Streamlit Cloud without installing local infrastructure:  
+👉 **[https://aether-dc-greenops-ai.streamlit.app/](https://aether-dc-greenops-ai.streamlit.app/)**
+
+To run locally in zero-dependency in-memory mode:
 
 ```bash
 # 1. Clone repository
@@ -418,15 +425,14 @@ AETHER-DC-GreenOps-AI/
 ├── pytest.ini                           # Pytest configuration
 ├── requirements.txt                     # Pinned dependencies
 ├── SPEC.md                              # Formal Technical Specification
-└── README.md                            # Senior Staff Engineer Flagship Documentation
+└── README.md                            # Comprehensive System Documentation
 ```
 
 ---
 
 ## 10. License & Author
 
-- **Author**: **[Maheza Novrayuda](https://github.com/MAHEZANOVRAYUDA)**
-- **Portfolio Flagship 1**: [telco-retention-decision-engine](https://github.com/MAHEZANOVRAYUDA/telco-retention-decision-engine)
-- **Portfolio Flagship 2**: [apexfin-ai](https://github.com/MAHEZANOVRAYUDA/apexfin-ai)
-- **Portfolio Flagship 3**: [AETHER-DC-GreenOps-AI](https://github.com/MAHEZANOVRAYUDA/AETHER-DC-GreenOps-AI)
+- **Lead Architect & Engineer**: **[Maheza Novrayuda](https://github.com/MAHEZANOVRAYUDA)**
+- **Live Interactive System**: [aether-dc-greenops-ai.streamlit.app](https://aether-dc-greenops-ai.streamlit.app/)
+- **Source Code Repository**: [github.com/MAHEZANOVRAYUDA/AETHER-DC-GreenOps-AI](https://github.com/MAHEZANOVRAYUDA/AETHER-DC-GreenOps-AI)
 - **License**: [MIT](LICENSE)

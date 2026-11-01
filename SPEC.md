@@ -5,7 +5,7 @@
 
 ### 1. Objective & Scope
 
-**AETHER-DC (`greenops-ai-datacenter-mlops`)** adalah platform portofolio flagship *high-impact* yang mendemonstrasikan integrasi end-to-end antara **Real-Time Data Engineering, Production MLOps, Enterprise Observability, dan Agentic AI Engineering** pada infrastruktur operasi komputasi kecerdasan buatan (*AI Data Center Operations & Green Compute / AIOps*).
+**AETHER-DC (`greenops-ai-datacenter-mlops`)** adalah sistem produksi *high-impact* yang mendemonstrasikan integrasi end-to-end antara **Real-Time Data Engineering, Production MLOps, Enterprise Observability, dan Agentic AI Engineering** pada infrastruktur operasi komputasi kecerdasan buatan (*AI Data Center Operations & Green Compute / AIOps*).
 
 #### Success Criteria:
 1. **Zero-Dummy / Zero-Bloat Execution**: Setiap interaksi UI (filter, dropdown, tombol skenario, tombol Hot-Swap, tombol remediate) memutasi dan membaca state analitik nyata dari DuckDB (`aether_dc.duckdb`) dan MLOps Engine.
