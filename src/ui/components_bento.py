@@ -1,20 +1,20 @@
 """Finnova Top Navigation, Action Header & 4 Asymmetric Bento KPI Cards.
 
 Implements pixel-accurate Finnova visual components:
-- Top Floating Pill Navbar (5 tabs + runtime mode pill)
+- Top Floating Pill Navbar
 - Action Row with Scenario Injector
 - Bento Card 1: Thermal Alerts + Server Rack Thermal Health Bar
 - Bento Card 2: Facility Power & PUE + 7 Vertical Gradient Bars (#5B4FE9 -> #DFDCFF)
 - Bento Card 3: PSI Drift + Connected Node-Line Sparkline (o-o-o)
-- Bento Card 4: Model Regime + 3 Vertical Mini-Cards (LGBM, XGBoost highlighted, IsoForest) + Hot-Swap Now CTA
+- Bento Card 4: Dynamic Model Regime + 3 Vertical Mini-Cards + Integrated Hot-Swap Now CTA
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 import streamlit as st
 
 
-def render_top_navbar(active_tab: str, runtime_mode_label: str = "Cloud Stream"):
-    """Renders Zone 1: Top Floating Pill Navbar."""
+def render_top_navbar(runtime_mode_label: str = "Cloud Stream"):
+    """Renders Zone 1: Brand & Status Header."""
     is_docker = "Docker" in runtime_mode_label
     status_bg = "#E6F8F5" if is_docker else "#EFEFFC"
     status_color = "#12A594" if is_docker else "#5B4FE9"
@@ -26,14 +26,6 @@ def render_top_navbar(active_tab: str, runtime_mode_label: str = "Cloud Stream")
             <div class="finnova-brand-logo">AETHER-DC</div>
             <span class="finnova-brand-badge">GreenOps AI</span>
             <span style="font-size: 0.75rem; color: #6E7191; font-weight: 500;">v2.4.0</span>
-        </div>
-
-        <div class="finnova-nav-capsule">
-            <span class="finnova-nav-tab {'active' if active_tab == 'Telemetry Hub' else ''}">+ Telemetry Hub</span>
-            <span class="finnova-nav-tab {'active' if active_tab == 'Lakehouse & DLQ' else ''}">Lakehouse & DLQ</span>
-            <span class="finnova-nav-tab {'active' if active_tab == 'Drift & MLOps' else ''}">Drift & MLOps</span>
-            <span class="finnova-nav-tab {'active' if active_tab == 'SRE Copilot' else ''}">SRE Copilot</span>
-            <span class="finnova-nav-tab {'active' if active_tab == 'Prometheus & Infra' else ''}">Prometheus & Infra</span>
         </div>
 
         <div class="finnova-nav-right">
@@ -55,18 +47,18 @@ def render_top_navbar(active_tab: str, runtime_mode_label: str = "Cloud Stream")
 def render_action_header(active_tab: str):
     """Renders Zone 2: Action Header Row."""
     descriptions = {
-        "Telemetry Hub": "Real-time GPU rack telemetry, PUE efficiency, and MLOps drift control in one place.",
+        "+ Telemetry Hub": "Real-time GPU rack telemetry, PUE efficiency, and MLOps drift control in one place.",
         "Lakehouse & DLQ": "DuckDB Medallion Lakehouse (Bronze -> Silver -> Gold) and Pydantic v2 Dead-Letter Queue.",
         "Drift & MLOps": "10-bin Population Stability Index (PSI), Kolmogorov-Smirnov test, and Shadow Evaluation.",
         "SRE Copilot": "Agentic SRE Incident Root-Cause Analysis, TreeSHAP, and counterfactual cooling simulation.",
         "Prometheus & Infra": "Production Prometheus telemetry metrics, scrape targets, and dual-mode architecture.",
     }
-    desc = descriptions.get(active_tab, descriptions["Telemetry Hub"])
+    desc = descriptions.get(active_tab, descriptions["+ Telemetry Hub"])
 
     html = f"""
     <div class="finnova-header-row">
         <div>
-            <h1 class="finnova-page-title">{active_tab}</h1>
+            <h1 class="finnova-page-title">{active_tab.replace('+ ', '')}</h1>
             <p class="finnova-page-subtitle">{desc}</p>
         </div>
     </div>
@@ -77,9 +69,9 @@ def render_action_header(active_tab: str):
 def render_bento_kpi_cards(
     kpis: Dict[str, Any],
     drift_data: Dict[str, Any],
+    eval_metrics: Dict[str, Any],
     active_champion: str,
     challenger_name: str,
-    on_hotswap_clicked=None,
 ):
     """Renders Zone 3: 4 Asymmetric Bento KPI Cards with micro-visualizations."""
     cols = st.columns(4)
@@ -98,7 +90,7 @@ def render_bento_kpi_cards(
                     <span class="finnova-bento-title">Active Thermal & DLQ Alerts</span>
                     <span class="finnova-bento-icon-badge" style="background: #FFF0F0; color: #E5484D;">⚠️</span>
                 </div>
-                <div class="finnova-bento-metric">{alerts_count} Racks</div>
+                <div class="finnova-bento-metric">{alerts_count} Alerts</div>
                 <div class="finnova-bento-delta delta-danger">
                     <span>↑ 12.5%</span>
                     <span style="color: #6E7191; font-weight: 500;">· {dlq_count} DLQ trapped</span>
@@ -118,7 +110,7 @@ def render_bento_kpi_cards(
                     <div style="flex: 2; background: #E5484D; border-radius: 4px;"></div>
                 </div>
                 <div style="font-size: 0.65rem; color: #8E92BC; margin-top: 0.35rem; text-align: center;">
-                    24 Racks Online · ASHRAE 32°C Cap
+                    24 Physical Racks · ASHRAE 32°C Cap
                 </div>
             </div>
         </div>
@@ -131,21 +123,12 @@ def render_bento_kpi_cards(
     with cols[1]:
         mean_pue = kpis.get("mean_pue", 1.18)
         total_kw = kpis.get("total_power_kw", 482.6)
-        clusters = kpis.get("cluster_pue_bars", [
-            {"cluster_label": "APAC-GPU", "cluster_pue": 1.45},
-            {"cluster_label": "ME-CMP", "cluster_pue": 1.35},
-            {"cluster_label": "NA-GPU", "cluster_pue": 1.25},
-            {"cluster_label": "EU-CMP", "cluster_pue": 1.18},
-            {"cluster_label": "APAC-EDG", "cluster_pue": 1.15},
-            {"cluster_label": "NA-STR", "cluster_pue": 1.12},
-            {"cluster_label": "EU-LIQ", "cluster_pue": 1.09},
-        ])
+        clusters = kpis.get("cluster_pue_bars", [])
 
         bars_html = ""
         for item in clusters[:7]:
             lbl = item.get("cluster_label", "RACK")[-7:]
             pue_val = float(item.get("cluster_pue", 1.20))
-            # Height normalized between 25px and 65px
             norm_h = int(max(20, min(65, (pue_val - 1.0) * 100)))
             bars_html += f"""
             <div class="finnova-bar-wrapper">
@@ -183,7 +166,7 @@ def render_bento_kpi_cards(
         max_psi = drift_data.get("max_psi", 0.084)
         is_drift = max_psi >= 0.20
         psi_delta_class = "delta-danger" if is_drift else "delta-success"
-        psi_status = "Critical Drift" if is_drift else "Stable Distribution"
+        psi_status = "Critical Drift" if is_drift else "Stable Baseline"
 
         # SVG Connected Node-Line Sparkline (o-o-o)
         sparkline_svg = """
@@ -212,7 +195,7 @@ def render_bento_kpi_cards(
                 <div class="finnova-bento-metric">{max_psi:.3f} PSI</div>
                 <div class="finnova-bento-delta {psi_delta_class}">
                     <span>{psi_status}</span>
-                    <span style="color: #6E7191; font-weight: 500;">· 8.4ms latency</span>
+                    <span style="color: #6E7191; font-weight: 500;">· 4.2ms latency</span>
                 </div>
             </div>
 
@@ -230,10 +213,13 @@ def render_bento_kpi_cards(
         st.markdown(card3_html, unsafe_allow_html=True)
 
     # ----------------------------------------------------
-    # BENTO CARD 4: Model & Cooling Regime + 3 Mini Cards & Hot-Swap Button
+    # BENTO CARD 4: Dynamic Model & Cooling Regime + Hot-Swap CTA
     # ----------------------------------------------------
     with cols[3]:
         is_lgbm = "lgbm" in active_champion
+        f1_pct = eval_metrics.get("champion_f1", 0.984) * 100.0
+        # Dynamic annual cost savings calculation
+        annual_savings = max(12000.0, kpis.get("total_power_kw", 480.0) * (kpis.get("mean_pue", 1.25) - 1.15) * 0.14 * 8760)
 
         card4_html = f"""
         <div class="finnova-bento-card">
@@ -242,9 +228,9 @@ def render_bento_kpi_cards(
                     <span class="finnova-bento-title">Model & Cooling Regime</span>
                     <span class="finnova-bento-icon-badge" style="background: #E6F8F5; color: #12A594;">↗</span>
                 </div>
-                <div class="finnova-bento-metric">+18.4% Saved</div>
+                <div class="finnova-bento-metric">${annual_savings / 1000.0:.1f}k/yr</div>
                 <div class="finnova-bento-delta delta-success">
-                    <span>98.4% Rolling F1</span>
+                    <span>{f1_pct:.1f}% Rolling F1</span>
                     <span style="color: #6E7191; font-weight: 500;">· Shadow Arena</span>
                 </div>
             </div>

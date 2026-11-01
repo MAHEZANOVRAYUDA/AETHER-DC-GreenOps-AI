@@ -109,3 +109,4 @@ class FastTreeSHAPExplainer:
 
         contributions.sort(key=lambda x: x["abs_impact"], reverse=True)
         return contributions[:5]
+

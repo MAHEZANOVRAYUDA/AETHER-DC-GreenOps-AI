@@ -5,8 +5,12 @@ Dual-Mode Architecture: Runs on Docker Compose (Redpanda + FastAPI + Prometheus)
 and features auto-fallback for 1-click deployment on Streamlit Community Cloud.
 """
 
+import os
 import sys
 from pathlib import Path
+
+# Fix joblib wmic deprecation on Windows
+os.environ["LOKY_MAX_CPU_COUNT"] = str(os.cpu_count() or 4)
 
 # Add project root to sys.path
 BASE_DIR = Path(__file__).resolve().parent
@@ -64,7 +68,7 @@ inject_finnova_theme()
 
 # Session State Tracking
 if "active_tab" not in st.session_state:
-    st.session_state["active_tab"] = "Telemetry Hub"
+    st.session_state["active_tab"] = "+ Telemetry Hub"
 if "selected_incident_id" not in st.session_state:
     st.session_state["selected_incident_id"] = None
 
@@ -74,32 +78,35 @@ runtime_label = "Docker Kafka Broker" if runtime_mode == RuntimeMode.DOCKER_KAFK
 # -------------------------------------------------------------------
 # ZONE 1: TOP FLOATING PILL NAVBAR
 # -------------------------------------------------------------------
-render_top_navbar(
-    active_tab=st.session_state["active_tab"],
-    runtime_mode_label=runtime_label,
-)
+render_top_navbar(runtime_mode_label=runtime_label)
 
-# Tab Selector Row (Integrated seamlessly into header navigation)
-tab_options = ["Telemetry Hub", "Lakehouse & DLQ", "Drift & MLOps", "SRE Copilot", "Prometheus & Infra"]
-tab_select_cols = st.columns([1, 1, 1, 1, 1])
-for idx, t_name in enumerate(tab_options):
-    with tab_select_cols[idx]:
-        is_current = (st.session_state["active_tab"] == t_name)
-        if st.button(
-            f"{'• ' if is_current else ''}{t_name}",
-            key=f"nav_btn_{t_name}",
-            type="primary" if is_current else "secondary",
-            use_container_width=True,
-        ):
-            st.session_state["active_tab"] = t_name
-            st.rerun()
+# Centered Navigation Pill Capsule
+nav_options = [
+    "+ Telemetry Hub",
+    "Lakehouse & DLQ",
+    "Drift & MLOps",
+    "SRE Copilot",
+    "Prometheus & Infra",
+]
+nav_cols = st.columns([1, 2.5, 1])
+with nav_cols[1]:
+    chosen_tab = st.segmented_control(
+        "Navbar Capsule",
+        nav_options,
+        default=st.session_state["active_tab"],
+        label_visibility="collapsed",
+        key="main_nav_segmented",
+    )
+    if chosen_tab and chosen_tab != st.session_state["active_tab"]:
+        st.session_state["active_tab"] = chosen_tab
+        st.rerun()
 
-st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom: 0.85rem;'></div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
 # ZONE 2: ACTION HEADER ROW + LIVE SCENARIO INJECTION TRIGGER
 # -------------------------------------------------------------------
-header_cols = st.columns([2.2, 1.2, 0.9])
+header_cols = st.columns([2.3, 1.1, 0.85])
 with header_cols[0]:
     render_action_header(active_tab=st.session_state["active_tab"])
 
@@ -124,11 +131,12 @@ with header_cols[2]:
         st.rerun()
 
 # -------------------------------------------------------------------
-# REACIVE DATA RETRIEVAL (DUCKDB + MLOPS)
+# REACTIVE DATA RETRIEVAL (DUCKDB + MLOPS)
 # -------------------------------------------------------------------
 kpis = medallion.get_facility_kpis()
 live_silver = medallion.get_silver_features(limit=250)
 drift_data = drift_detector.compute_drifts(live_silver)
+eval_metrics = registry.evaluate_shadow_arena(live_silver)
 
 # Update Prometheus Gauges
 for feat, metrics in drift_data["feature_metrics"].items():
@@ -141,14 +149,15 @@ prom_manager.facility_pue_gauge.labels(region="Global", cooling_type="All").set(
 render_bento_kpi_cards(
     kpis=kpis,
     drift_data=drift_data,
+    eval_metrics=eval_metrics,
     active_champion=registry.active_champion_name,
     challenger_name=registry.challenger_name,
 )
 
-# Inline Hot-Swap Action Row under Bento 4
+# Inline Hot-Swap Action Row directly beneath Card 4
 swap_cols = st.columns([3, 1])
 with swap_cols[1]:
-    if st.button("⚡ Hot-Swap Champion/Challenger Now", key="btn_quick_swap", use_container_width=True):
+    if st.button("⚡ Hot-Swap Champion/Challenger Now", key="btn_hotswap_card4", use_container_width=True):
         swap_res = registry.hot_swap_now(
             reason="Operator Triggered Hot-Swap via Bento Card",
             psi=drift_data.get("max_psi", 0.22),
@@ -156,12 +165,12 @@ with swap_cols[1]:
         st.toast(f"Hot-Swap Complete! New Champion: {swap_res['new_champion']}", icon="🚀")
         st.rerun()
 
-st.markdown("<div style='margin-bottom: 1.25rem;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
 # VIEW ROUTING BASED ON ACTIVE TAB
 # -------------------------------------------------------------------
-if st.session_state["active_tab"] == "Telemetry Hub":
+if st.session_state["active_tab"] == "+ Telemetry Hub":
     # ZONE 4: HORIZONTAL PILL FILTER BAR
     filters = render_filter_bar(total_count=kpis.get("active_alerts_count", 14))
 
@@ -233,8 +242,6 @@ elif st.session_state["active_tab"] == "Lakehouse & DLQ":
 
 elif st.session_state["active_tab"] == "Drift & MLOps":
     st.markdown("### Production MLOps Arena: PSI Drift & Shadow Evaluation")
-    eval_metrics = registry.evaluate_shadow_arena(live_silver)
-
     d_col1, d_col2 = st.columns([1.2, 1.8])
     with d_col1:
         st.markdown("#### 10-Bin Population Stability Index (PSI)")
@@ -252,8 +259,8 @@ elif st.session_state["active_tab"] == "Drift & MLOps":
     with d_col2:
         st.markdown("#### Shadow Evaluation: Champion (LightGBM) vs Challenger (XGBoost)")
         shadow_records = [
-            {"Model Role": "Champion", "Algorithm": registry.active_champion_name, "Rolling F1": eval_metrics["champion_f1"], "RMSE (PUE)": eval_metrics["champion_rmse"]},
-            {"Model Role": "Challenger (Shadow)", "Algorithm": registry.challenger_name, "Rolling F1": eval_metrics["challenger_f1"], "RMSE (PUE)": eval_metrics["challenger_rmse"]},
+            {"Model Role": "Champion", "Algorithm": registry.active_champion_name, "Rolling F1": f"{eval_metrics['champion_f1'] * 100:.1f}%", "RMSE (PUE)": eval_metrics["champion_rmse"]},
+            {"Model Role": "Challenger (Shadow)", "Algorithm": registry.challenger_name, "Rolling F1": f"{eval_metrics['challenger_f1'] * 100:.1f}%", "RMSE (PUE)": eval_metrics["challenger_rmse"]},
         ]
         st.dataframe(pd.DataFrame(shadow_records), use_container_width=True)
 

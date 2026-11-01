@@ -89,31 +89,38 @@ def render_obsidian_workspace(
     on_remediate_callback=None,
 ):
     """Renders Zone 5: Obsidian Split-View Master-Detail Workspace."""
-    # Top Inverted Center Notch Tab Switcher
-    active_tab = st.session_state.get("obsidian_tab", "Active Incidents")
     inc_count = len(incidents_df)
     dlq_count = len(dlq_df)
 
-    n_cols = st.columns([1, 2, 1])
+    # Top Inverted Center Notch Tab Switcher using Segmented Control
+    notch_options = [
+        "All Telemetry Racks",
+        f"DLQ Alerts [{dlq_count}]",
+        f"Active Incidents [{inc_count}]",
+    ]
+    current_notch = st.session_state.get("obsidian_tab", f"Active Incidents [{inc_count}]")
+    if current_notch not in notch_options:
+        current_notch = f"Active Incidents [{inc_count}]"
+
+    n_cols = st.columns([1, 2.2, 1])
     with n_cols[1]:
-        tab_cols = st.columns(3)
-        with tab_cols[0]:
-            if st.button("All Telemetry Racks", key="tab_all_racks", use_container_width=True):
-                st.session_state["obsidian_tab"] = "All Racks"
-                st.rerun()
-        with tab_cols[1]:
-            if st.button(f"DLQ Alerts [{dlq_count}]", key="tab_dlq", use_container_width=True):
-                st.session_state["obsidian_tab"] = "DLQ Alerts"
-                st.rerun()
-        with tab_cols[2]:
-            if st.button(f"Active Incidents [{inc_count}]", key="tab_incidents", type="primary", use_container_width=True):
-                st.session_state["obsidian_tab"] = "Active Incidents"
-                st.rerun()
+        chosen_notch = st.segmented_control(
+            "Notch Tabs",
+            notch_options,
+            default=current_notch,
+            label_visibility="collapsed",
+            key="segmented_notch_tabs",
+        )
+        if chosen_notch and chosen_notch != st.session_state.get("obsidian_tab"):
+            st.session_state["obsidian_tab"] = chosen_notch
+            st.rerun()
+
+    active_notch = st.session_state.get("obsidian_tab", f"Active Incidents [{inc_count}]")
 
     # Obsidian Workspace Container
     st.markdown('<div class="finnova-obsidian-workspace">', unsafe_allow_html=True)
 
-    if active_tab == "DLQ Alerts":
+    if "DLQ Alerts" in active_notch:
         st.markdown("<h3 style='color: #FFFFFF; margin-bottom: 1rem;'>Dead-Letter Queue (DLQ) Isolated Packets</h3>", unsafe_allow_html=True)
         if dlq_df.empty:
             st.info("No corrupted packets trapped in DLQ. All ingested packets are physically valid.")
@@ -121,13 +128,13 @@ def render_obsidian_workspace(
             st.dataframe(
                 dlq_df[["dlq_id", "ingested_at", "error_type", "error_detail", "source_topic", "raw_payload"]],
                 use_container_width=True,
-                height=400,
+                height=420,
             )
         st.markdown('</div>', unsafe_allow_html=True)
         return
 
-    elif active_tab == "All Racks":
-        st.markdown("<h3 style='color: #FFFFFF; margin-bottom: 1rem;'>All Racks Telemetry Live Stream</h3>", unsafe_allow_html=True)
+    elif "All Telemetry Racks" in active_notch:
+        st.markdown("<h3 style='color: #FFFFFF; margin-bottom: 1rem;'>All Racks Telemetry Live Stream (DuckDB Silver)</h3>", unsafe_allow_html=True)
         if all_telemetry_df.empty:
             st.info("No telemetry records found.")
         else:
@@ -137,7 +144,7 @@ def render_obsidian_workspace(
                 "cooling_stress_index", "thermal_velocity_delta_c"
             ]
             cols_avail = [c for c in display_cols if c in all_telemetry_df.columns]
-            st.dataframe(all_telemetry_df[cols_avail], use_container_width=True, height=400)
+            st.dataframe(all_telemetry_df[cols_avail], use_container_width=True, height=420)
         st.markdown('</div>', unsafe_allow_html=True)
         return
 
@@ -160,8 +167,8 @@ def render_obsidian_workspace(
     with col_left:
         st.markdown("""
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-            <span style="color: #A5A8C4; font-size: 0.85rem; font-weight: 600;">ACTIVE INCIDENT QUEUE</span>
-            <span style="color: #5B4FE9; font-size: 0.75rem; font-weight: 700; background: rgba(91, 79, 233, 0.15); padding: 0.2rem 0.5rem; border-radius: 9999px;">Real-Time</span>
+            <span style="color: #A5A8C4; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em;">LIVE INCIDENT QUEUE</span>
+            <span style="color: #5B4FE9; font-size: 0.75rem; font-weight: 700; background: rgba(91, 79, 233, 0.2); padding: 0.2rem 0.6rem; border-radius: 9999px;">Prioritized</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -174,33 +181,16 @@ def render_obsidian_workspace(
                 pue_val = float(row.get("actual_pue", 1.25))
                 temp_c = float(row.get("inlet_temperature_c", 28.0))
                 stype = row.get("server_type", "GPU")
+                status = row.get("incident_status", "Thermal Spike")
                 is_selected = (selected_record and selected_record.get("incident_id") == inc_id)
 
-                badge_bg = "#4A3BDC" if stype == "GPU" else "#2563EB"
-                row_bg = "#5B4FE9" if is_selected else "#25283D"
-                border_color = "#7B78D8" if is_selected else "rgba(255, 255, 255, 0.05)"
-
-                row_html = f"""
-                <div style="background: {row_bg}; border-radius: 14px; padding: 0.8rem 1rem; margin-bottom: 0.5rem;
-                     border: 1px solid {border_color}; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 0.65rem;">
-                        <span style="background: {badge_bg}; color: #FFFFFF; font-size: 0.68rem; font-weight: 800;
-                              padding: 0.2rem 0.45rem; border-radius: 6px;">{stype[:3]}</span>
-                        <div>
-                            <div style="color: #FFFFFF; font-weight: 700; font-size: 0.85rem;">#{inc_id} · {rack_id}</div>
-                            <div style="color: {'#DFDCFF' if is_selected else '#8E92BC'}; font-size: 0.72rem;">
-                                {temp_c:.1f}°C inlet · {row.get('incident_status', 'Anomaly')}
-                            </div>
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <span style="background: rgba(255, 255, 255, 0.18); color: #FFFFFF; font-weight: 700;
-                              font-size: 0.78rem; padding: 0.25rem 0.55rem; border-radius: 9999px;">{pue_val:.2f} PUE</span>
-                    </div>
-                </div>
-                """
-                st.markdown(row_html, unsafe_allow_html=True)
-                if st.button(f"Inspect #{inc_id}", key=f"btn_sel_{inc_id}", use_container_width=True):
+                btn_label = f"[{stype[:3]}]  #{inc_id} · {rack_id}   |   {temp_c:.1f}°C   |   {pue_val:.2f} PUE"
+                if st.button(
+                    btn_label,
+                    key=f"inc_btn_{inc_id}",
+                    type="primary" if is_selected else "secondary",
+                    use_container_width=True,
+                ):
                     st.session_state["selected_incident_id"] = inc_id
                     st.rerun()
 
@@ -229,7 +219,7 @@ def render_obsidian_workspace(
             # Run SRE RCA plan
             plan = copilot.analyze_incident(selected_record)
 
-            # Card Header
+            # Inspector Card
             st.markdown(f"""
             <div class="finnova-indigo-inspector">
                 <div>
@@ -251,9 +241,9 @@ def render_obsidian_workspace(
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
                         <!-- Glass Sub-Card 1: Thermal & Power State -->
                         <div class="finnova-glass-card">
-                            <div style="font-size: 0.72rem; opacity: 0.8; font-weight: 600;">THERMAL & POWER METRICS</div>
-                            <div style="font-size: 1.35rem; font-weight: 800; margin-top: 0.2rem;">{temp_c:.1f}°C <span style="font-size: 0.85rem; font-weight: 500;">Inlet</span></div>
-                            <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">
+                            <div style="font-size: 0.72rem; opacity: 0.85; font-weight: 700;">THERMAL & POWER METRICS</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; margin-top: 0.2rem;">{temp_c:.1f}°C <span style="font-size: 0.85rem; font-weight: 500;">Inlet</span></div>
+                            <div style="font-size: 0.75rem; opacity: 0.95; margin-top: 0.25rem;">
                                 Cooling Efficiency: <b>{cooling_eff:.2f}</b><br>
                                 Power Draw: <b>{power_kw:.1f} kW</b>
                             </div>
@@ -261,9 +251,9 @@ def render_obsidian_workspace(
 
                         <!-- Glass Sub-Card 2: Shadow Model Verdict -->
                         <div class="finnova-glass-card">
-                            <div style="font-size: 0.72rem; opacity: 0.8; font-weight: 600;">SHADOW MODEL VERDICT</div>
-                            <div style="font-size: 1.35rem; font-weight: 800; margin-top: 0.2rem;">{chall_pue:.2f} <span style="font-size: 0.85rem; font-weight: 500;">XGB PUE</span></div>
-                            <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">
+                            <div style="font-size: 0.72rem; opacity: 0.85; font-weight: 700;">SHADOW MODEL VERDICT</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; margin-top: 0.2rem;">{chall_pue:.2f} <span style="font-size: 0.85rem; font-weight: 500;">XGB PUE</span></div>
+                            <div style="font-size: 0.75rem; opacity: 0.95; margin-top: 0.25rem;">
                                 Champion LGBM: <b>{champ_pue:.2f} PUE</b><br>
                                 Top SHAP Driver: <b>{top_shap}</b>
                             </div>
@@ -271,42 +261,42 @@ def render_obsidian_workspace(
 
                         <!-- Glass Sub-Card 3: Financial & Carbon Burn -->
                         <div class="finnova-glass-card">
-                            <div style="font-size: 0.72rem; opacity: 0.8; font-weight: 600;">FINANCIAL & CARBON BURN</div>
-                            <div style="font-size: 1.35rem; font-weight: 800; margin-top: 0.2rem;">${waste_usd:.2f}/hr <span style="font-size: 0.85rem; font-weight: 500;">Waste</span></div>
-                            <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">
+                            <div style="font-size: 0.72rem; opacity: 0.85; font-weight: 700;">FINANCIAL & CARBON BURN</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; margin-top: 0.2rem;">${waste_usd:.2f}/hr <span style="font-size: 0.85rem; font-weight: 500;">Waste</span></div>
+                            <div style="font-size: 0.75rem; opacity: 0.95; margin-top: 0.25rem;">
                                 Est. Carbon Penalty: <b>{plan.estimated_carbon_reduction_kg:.1f} kg CO2/hr</b>
                             </div>
                         </div>
 
                         <!-- Glass Sub-Card 4: SRE Copilot Action -->
                         <div class="finnova-glass-card">
-                            <div style="font-size: 0.72rem; opacity: 0.8; font-weight: 600;">AGENTIC SRE ROOT-CAUSE</div>
-                            <div style="font-size: 0.78rem; font-weight: 600; line-height: 1.3; margin-top: 0.2rem;">
+                            <div style="font-size: 0.72rem; opacity: 0.85; font-weight: 700;">AGENTIC SRE ROOT-CAUSE</div>
+                            <div style="font-size: 0.76rem; font-weight: 600; line-height: 1.35; margin-top: 0.2rem;">
                                 {plan.root_cause_summary[:110]}...
                             </div>
-                            <div style="font-size: 0.72rem; opacity: 0.9; margin-top: 0.25rem; color: #FFE79A;">
+                            <div style="font-size: 0.72rem; opacity: 0.95; margin-top: 0.25rem; color: #FFE79A;">
                                 Action: {plan.recommended_cooling_action[:75]}...
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Footer Summary Row & Execute Remediation CTA -->
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 1rem;">
+                <!-- Footer Summary Row -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 0.85rem; margin-top: 0.5rem;">
                     <div style="display: flex; gap: 1.5rem; align-items: center;">
                         <div>
                             <div style="font-size: 0.68rem; opacity: 0.75;">BASELINE PUE</div>
-                            <div style="font-size: 1.05rem; font-weight: 700;">1.15</div>
+                            <div style="font-size: 1.1rem; font-weight: 800;">1.15</div>
                         </div>
                         <div style="color: rgba(255, 255, 255, 0.4); font-size: 1.2rem;">→</div>
                         <div>
                             <div style="font-size: 0.68rem; opacity: 0.75;">CURRENT ANOMALY</div>
-                            <div style="font-size: 1.05rem; font-weight: 700; color: #FFD4D5;">{actual_pue:.2f}</div>
+                            <div style="font-size: 1.1rem; font-weight: 800; color: #FFD4D5;">{actual_pue:.2f}</div>
                         </div>
                         <div style="color: rgba(255, 255, 255, 0.4); font-size: 1.2rem;">→</div>
                         <div>
                             <div style="font-size: 0.68rem; opacity: 0.75;">PROJECTED TARGET</div>
-                            <div style="font-size: 1.05rem; font-weight: 700; color: #B3F5E7;">{plan.projected_pue_after_action:.2f}</div>
+                            <div style="font-size: 1.1rem; font-weight: 800; color: #B3F5E7;">{plan.projected_pue_after_action:.2f}</div>
                         </div>
                     </div>
                 </div>
@@ -314,10 +304,11 @@ def render_obsidian_workspace(
             """, unsafe_allow_html=True)
 
             # Remediation Button Trigger
-            if st.button("Execute Remediation / Normalize Cooling Loop", key="btn_remediate", type="primary", use_container_width=True):
+            st.markdown("<div style='margin-top: 0.6rem;'></div>", unsafe_allow_html=True)
+            if st.button(f"⚡ Execute SRE Remediation for #{inc_id} (Target PUE: {plan.projected_pue_after_action:.2f})", key="btn_remediate_main", type="primary", use_container_width=True):
                 if on_remediate_callback:
                     on_remediate_callback(inc_id, plan.projected_pue_after_action)
-                st.success(f"Remediation executed for #{inc_id}! Projected PUE reduced to {plan.projected_pue_after_action:.2f}.")
+                st.toast(f"Remediation executed for #{inc_id}! Target PUE normalized to {plan.projected_pue_after_action:.2f}.", icon="✅")
                 st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)

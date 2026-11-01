@@ -7,8 +7,12 @@ Trains:
 Saves artifacts to data/models/.
 """
 
+import os
 import sys
 from pathlib import Path
+
+# Fix joblib wmic deprecation on Windows
+os.environ["LOKY_MAX_CPU_COUNT"] = str(os.cpu_count() or 4)
 
 # Add project root to sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -160,9 +164,11 @@ def train_and_save_all_models(df: pd.DataFrame, models_dir: Path) -> dict:
         joblib.dump(model, filepath)
         print(f"    [+] Saved model artifact: {filepath.name}")
 
-    # Save baseline feature summary for PSI drift reference
+    # Save baseline feature summary for PSI drift reference (including raw target pue)
     feature_ref_path = models_dir / "baseline_feature_reference.parquet"
-    X.to_parquet(feature_ref_path, index=False)
-    print(f"    [+] Saved baseline feature reference: {feature_ref_path.name}")
+    X_ref = X.copy()
+    X_ref["pue"] = y_reg.values
+    X_ref.to_parquet(feature_ref_path, index=False)
+    print(f"    [+] Saved baseline feature reference with PUE: {feature_ref_path.name}")
 
     return artifacts

@@ -130,3 +130,4 @@ def test_sre_remediation_plan_contract():
     )
     assert plan.confidence_score == 0.96
     assert plan.projected_pue_after_action >= 1.01
+

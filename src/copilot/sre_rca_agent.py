@@ -103,3 +103,4 @@ class AgenticSREIncidentCopilot:
             estimated_hourly_savings_usd=hourly_savings_usd,
             estimated_carbon_reduction_kg=carbon_reduction_kg,
         )
+

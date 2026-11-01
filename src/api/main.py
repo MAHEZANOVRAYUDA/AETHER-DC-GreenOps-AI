@@ -189,3 +189,4 @@ def prometheus_metrics():
     """Prometheus scraping endpoint."""
     data = prom_manager.export_metrics()
     return Response(content=data, media_type="text/plain; version=0.0.4; charset=utf-8")
+

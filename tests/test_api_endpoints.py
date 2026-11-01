@@ -1,5 +1,8 @@
 """Integration Tests for FastAPI Backend Endpoints."""
 
+import os
+os.environ["LOKY_MAX_CPU_COUNT"] = "4"
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -68,3 +71,4 @@ def test_api_prometheus_metrics():
     assert res.status_code == 200
     assert "aether_telemetry_events_total" in res.text
     assert "aether_facility_pue_gauge" in res.text
+

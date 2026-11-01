@@ -48,3 +48,4 @@ kafka:
 copilot:
   default_confidence: 0.94
   counterfactual_pue_reduction_factor: 0.82
+

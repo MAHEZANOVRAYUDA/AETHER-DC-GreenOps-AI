@@ -1,5 +1,8 @@
 """Unit Tests for MLOps Engine: 10-bin PSI Drift, Shadow Evaluation & Hot-Swap."""
 
+import os
+os.environ["LOKY_MAX_CPU_COUNT"] = "4"
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -146,3 +149,4 @@ def test_treeshap_feature_attribution():
     assert "feature" in top_feat
     assert "abs_impact" in top_feat
     assert top_feat["abs_impact"] >= 0.0
+

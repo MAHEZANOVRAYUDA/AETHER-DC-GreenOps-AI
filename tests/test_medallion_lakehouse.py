@@ -138,3 +138,4 @@ def test_model_hotswap_audit_logging(temp_lakehouse):
     assert len(logs) == 1
     assert logs.iloc[0]["previous_champion"] == "champion_lgbm"
     assert logs.iloc[0]["new_champion"] == "challenger_xgb"
+

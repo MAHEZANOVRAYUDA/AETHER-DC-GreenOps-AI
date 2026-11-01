@@ -85,3 +85,4 @@ def get_models_dir() -> Path:
     p = get_base_dir() / "data" / "models"
     p.mkdir(parents=True, exist_ok=True)
     return p
+

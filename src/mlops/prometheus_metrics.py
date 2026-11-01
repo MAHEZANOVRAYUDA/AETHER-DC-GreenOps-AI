@@ -125,3 +125,4 @@ class PrometheusMetricsManager:
     def export_metrics(self) -> bytes:
         """Serializes current metrics in Prometheus text format."""
         return generate_latest(self.registry)
+

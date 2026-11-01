@@ -251,3 +251,4 @@ class MLOpsModelRegistry:
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
             "reason": reason,
         }
+

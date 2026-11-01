@@ -50,3 +50,4 @@ class KafkaTelemetryProducer:
                 self.producer.flush(timeout_sec)
             except Exception:
                 pass
+

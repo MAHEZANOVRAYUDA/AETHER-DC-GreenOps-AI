@@ -3,16 +3,17 @@
 Translates Finnova visual tokens into Streamlit:
 - Alabaster Lavender-White canvas (#FBFAFF)
 - Google Font 'Plus Jakarta Sans' & 'Inter'
+- Floating Pill Navbar Capsule (#161825, rounded-full)
 - 4 Asymmetric Bento KPI Cards with crisp 1px borders (#EAE8F6)
 - Obsidian Split-View Master-Detail Workspace (#1E2132, radius 28px)
 - Periwinkle-Indigo Inspector Card (#5E5CE6) with translucent glass sub-cards
-- Hides default Streamlit chrome & sidebar.
+- Pixel-perfect button overrides for Hot-Swap and Remediation.
 """
 
 FINNOVA_CSS = """
 <style>
 /* 1. Google Fonts Import */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 /* 2. Global Document Reset & Base Styling */
 html, body, [class*="css"] {
@@ -35,7 +36,7 @@ footer {
 /* Adjust Main Block Container Padding */
 .main .block-container {
     max-width: 1440px !important;
-    padding-top: 1.2rem !important;
+    padding-top: 1rem !important;
     padding-bottom: 2.5rem !important;
     padding-left: 2rem !important;
     padding-right: 2rem !important;
@@ -47,14 +48,14 @@ footer {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     padding: 0.25rem 0;
 }
 
 .finnova-brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.65rem;
 }
 .finnova-brand-logo {
     font-size: 1.35rem;
@@ -65,37 +66,41 @@ footer {
 .finnova-brand-badge {
     background: #EFEFFC;
     color: #4A3BDC;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 700;
     padding: 0.2rem 0.55rem;
     border-radius: 9999px;
 }
 
-.finnova-nav-capsule {
-    display: inline-flex;
-    align-items: center;
-    background-color: #161825;
-    padding: 0.35rem 0.45rem;
-    border-radius: 9999px;
-    gap: 0.35rem;
-    box-shadow: 0 4px 16px rgba(22, 24, 37, 0.12);
+/* Segmented Control Styled into Dark Capsule */
+div[data-testid="stSegmentedControl"] {
+    background-color: #161825 !important;
+    padding: 4px 6px !important;
+    border-radius: 9999px !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 16px rgba(22, 24, 37, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
-.finnova-nav-tab {
-    padding: 0.45rem 1.15rem;
-    border-radius: 9999px;
-    font-size: 0.825rem;
-    font-weight: 600;
-    color: #A5A8C4;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    border: none;
-    background: transparent;
+div[data-testid="stSegmentedControl"] button {
+    border-radius: 9999px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    color: #A5A8C4 !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 6px 18px !important;
+    transition: all 0.2s ease !important;
 }
-.finnova-nav-tab.active {
-    background-color: #4A3BDC;
-    color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(74, 59, 220, 0.35);
+div[data-testid="stSegmentedControl"] button:hover {
+    color: #FFFFFF !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+div[data-testid="stSegmentedControl"] button[aria-checked="true"],
+div[data-testid="stSegmentedControl"] button[data-checked="true"] {
+    background-color: #4A3BDC !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(74, 59, 220, 0.4) !important;
 }
 
 .finnova-nav-right {
@@ -115,8 +120,8 @@ footer {
     background: #FFFFFF;
 }
 .finnova-avatar {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: linear-gradient(135deg, #4A3BDC, #7B78D8);
     color: #FFFFFF;
@@ -125,6 +130,7 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 8px rgba(74, 59, 220, 0.25);
 }
 
 /* 4. Zone 2: Action Header Row */
@@ -132,10 +138,10 @@ footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 .finnova-page-title {
-    font-size: 1.875rem;
+    font-size: 1.85rem;
     font-weight: 800;
     letter-spacing: -0.025em;
     color: #161825;
@@ -145,7 +151,7 @@ footer {
 .finnova-page-subtitle {
     font-size: 0.875rem;
     color: #6E7191;
-    margin-top: 0.3rem;
+    margin-top: 0.25rem;
     margin-bottom: 0;
 }
 
@@ -155,7 +161,7 @@ footer {
     border: 1px solid #EAE8F6;
     border-radius: 22px;
     padding: 1.35rem;
-    height: 250px;
+    height: 255px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -235,14 +241,15 @@ footer {
 .finnova-mini-cards-row {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.35rem;
     width: 100%;
-    margin-top: 0.6rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0.5rem;
 }
 .finnova-mini-card {
     flex: 1;
-    padding: 0.45rem 0.35rem;
-    border-radius: 12px;
+    padding: 0.4rem 0.25rem;
+    border-radius: 10px;
     background: #F4F3FA;
     text-align: center;
     font-size: 0.7rem;
@@ -253,7 +260,7 @@ footer {
 .finnova-mini-card.active-challenger {
     background: linear-gradient(135deg, #5B4FE9 0%, #7B78D8 100%);
     color: #FFFFFF;
-    box-shadow: 0 4px 10px rgba(91, 79, 233, 0.3);
+    box-shadow: 0 3px 8px rgba(91, 79, 233, 0.3);
 }
 .finnova-mini-card-sub {
     font-size: 0.58rem;
@@ -266,59 +273,20 @@ footer {
     background: #1E2132;
     border-radius: 28px;
     padding: 1.85rem;
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
     box-shadow: 0 12px 36px rgba(22, 24, 37, 0.16);
     position: relative;
 }
 
-.finnova-notch-bar {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
-.finnova-notch-capsule {
-    background: #161825;
-    padding: 0.35rem 0.5rem;
-    border-radius: 9999px;
-    display: inline-flex;
-    gap: 0.4rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-.finnova-notch-tab {
-    padding: 0.4rem 1.15rem;
-    border-radius: 9999px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #A5A8C4;
-    cursor: pointer;
-}
-.finnova-notch-tab.active {
-    background: #5B4FE9;
-    color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(91, 79, 233, 0.4);
-}
-
-/* Incident Queue Row (Left Pane) */
-.finnova-queue-row {
-    background: #25283D;
-    border-radius: 14px;
-    padding: 0.85rem 1rem;
-    margin-bottom: 0.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-.finnova-queue-row:hover {
-    background: #2E324B;
-    transform: translateX(2px);
-}
-.finnova-queue-row.selected-active {
-    background: #5B4FE9 !important;
-    border-color: #7B78D8 !important;
-    box-shadow: 0 4px 14px rgba(91, 79, 233, 0.4);
+/* Incident Queue Row Button Overrides */
+div[data-testid="column"]:first-child div.stButton button {
+    text-align: left !important;
+    justify-content: space-between !important;
+    padding: 0.85rem 1rem !important;
+    margin-bottom: 0.4rem !important;
+    font-size: 0.825rem !important;
+    border-radius: 14px !important;
+    font-family: 'Inter', sans-serif !important;
 }
 
 /* Right Detail Inspector Card (Periwinkle-Indigo) */
@@ -331,7 +299,7 @@ footer {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 440px;
+    min-height: 480px;
 }
 
 .finnova-glass-card {
@@ -339,31 +307,30 @@ footer {
     border: 1px solid rgba(255, 255, 255, 0.24);
     backdrop-filter: blur(8px);
     border-radius: 16px;
-    padding: 1rem;
+    padding: 0.95rem;
     color: #FFFFFF;
 }
 
-.finnova-white-pill-btn {
-    background: #FFFFFF !important;
-    color: #4A3BDC !important;
-    font-weight: 700 !important;
+/* White Pill Button */
+button[kind="primary"] {
+    background: #5B4FE9 !important;
     border-radius: 9999px !important;
-    padding: 0.55rem 1.45rem !important;
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-    cursor: pointer !important;
-    font-size: 0.85rem !important;
-    transition: transform 0.15s ease !important;
-}
-.finnova-white-pill-btn:hover {
-    transform: scale(1.02);
+    font-weight: 700 !important;
 }
 
-/* Streamlit button style overrides for pills */
-div.stButton > button {
+/* Pill Filter Selectboxes */
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
     border-radius: 9999px !important;
+    background-color: #F4F3FA !important;
+    border-color: #EAE8F6 !important;
+    font-size: 0.825rem !important;
     font-weight: 600 !important;
-    transition: all 0.2s ease !important;
+}
+div[data-testid="stTextInput"] input {
+    border-radius: 9999px !important;
+    background-color: #F4F3FA !important;
+    border-color: #EAE8F6 !important;
+    font-size: 0.825rem !important;
 }
 </style>
 """

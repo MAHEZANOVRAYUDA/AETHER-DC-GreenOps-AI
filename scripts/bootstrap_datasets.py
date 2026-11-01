@@ -5,8 +5,12 @@ enriched with multivariate time-series anomalies from SMD & NAB.
 Initializes DuckDB Lakehouse (Bronze -> Silver -> Gold) and baseline models.
 """
 
+import os
 import sys
 from pathlib import Path
+
+# Fix joblib wmic deprecation on Windows
+os.environ["LOKY_MAX_CPU_COUNT"] = str(os.cpu_count() or 4)
 
 # Add project root to sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -451,8 +455,11 @@ def ensure_dataset_and_lakehouse_ready() -> duckdb.DuckDBPyConnection:
 
     # 2. DuckDB Lakehouse Connection & Schema
     con = duckdb.connect(str(db_path))
-    initialize_duckdb_schema(con)
-    seed_lakehouse_data(con, df)
+    try:
+        initialize_duckdb_schema(con)
+        seed_lakehouse_data(con, df)
+    finally:
+        con.close()
 
     # 3. Model Artifacts Verification
     required_models = [
@@ -463,17 +470,18 @@ def ensure_dataset_and_lakehouse_ready() -> duckdb.DuckDBPyConnection:
         "guard_isolation_forest.joblib",
     ]
     missing = [m for m in required_models if not (models_dir / m).exists()]
-    if missing:
-        print(f"[*] Missing model artifacts: {missing}. Training baseline models...")
+    if missing or not (models_dir / "baseline_feature_reference.parquet").exists():
+        print(f"[*] Missing model artifacts or feature reference. Training baseline models...")
         train_and_save_all_models(df, models_dir)
         print("[+] Baseline models successfully trained and serialized.")
 
-    return con
+    return True
 
 
 if __name__ == "__main__":
     print("[*] Starting AETHER-DC Bootstrap...")
-    con = ensure_dataset_and_lakehouse_ready()
+    ensure_dataset_and_lakehouse_ready()
+    con = duckdb.connect(str(get_duckdb_path()))
     bronze_count = con.execute("SELECT COUNT(*) FROM bronze_telemetry_events").fetchone()[0]
     silver_count = con.execute("SELECT COUNT(*) FROM silver_enriched_telemetry").fetchone()[0]
     gold_count = con.execute("SELECT COUNT(*) FROM gold_incident_predictions").fetchone()[0]
