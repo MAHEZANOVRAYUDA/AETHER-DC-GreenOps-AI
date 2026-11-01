@@ -19,7 +19,32 @@
 
 The user interface of **AETHER-DC** adheres strictly to the **Finnova Human-Centric Visual Architecture**: a crisp Alabaster `#FBFAFF` canvas, single-row floating pill navigation, asymmetric 4-Bento KPI cards with custom SVG and CSS micro-visualizations, and an Obsidian `#1E2132` master-detail split workspace featuring an illuminated Indigo-Periwinkle `#5E5CE6` inspector card with frosted glass sub-components.
 
-![AETHER-DC Finnova UI Overview](docs/assets/dashboard_overview.png)
+Every view has been verified and rendered without `<pre><code>` code-block leakage, adhering to WCAG 2.1 AA accessibility and zero-layout-shift ergonomics.
+
+### 1.1 Telemetry Hub & Master-Detail Obsidian Workspace
+The primary operational cockpit combines real-time streaming health, a live incident queue, and multi-dimensional thermal/cooling inspection.
+
+![01 Telemetry Hub](docs/assets/01_telemetry_hub.png)
+
+### 1.2 DuckDB Medallion Lakehouse & Dead-Letter Queue (DLQ)
+Inspects the Bronze $\rightarrow$ Silver $\rightarrow$ Gold analytical data lakehouse and isolates corrupted thermodynamic packets quarantined by the Pydantic v2 contract gate.
+
+![02 Lakehouse & DLQ](docs/assets/02_lakehouse_dlq.png)
+
+### 1.3 Production MLOps Arena & Statistical Drift Monitoring
+Features real-time 10-bin Population Stability Index (PSI) calculation, Kolmogorov-Smirnov (KS-test) p-values, Champion (`LightGBM`) vs Challenger (`XGBoost`) shadow evaluation, and the immutable Model Hot-Swap Audit Log.
+
+![03 Drift & MLOps](docs/assets/03_drift_mlops.png)
+
+### 1.4 Autonomous SRE Copilot & Counterfactual Cooling Optimizer
+Agentic Root-Cause Analysis (RCA) powered by local TreeSHAP attribution, generating counterfactual cooling simulations ($PUE$, carbon, and cost reduction) with one-click automated remediation.
+
+![04 SRE Copilot](docs/assets/04_sre_copilot.png)
+
+### 1.5 Prometheus Telemetry Scrape & Infrastructure Observability
+Exposes native Prometheus metrics (`Counter`, `Gauge`, `Histogram`), dual-mode runtime status (Docker Compose vs In-Memory Fallback), and live raw `/metrics` text exposition.
+
+![05 Prometheus & Infra](docs/assets/05_prometheus_infra.png)
 
 ### Design Fidelity & Visual Ergonomics
 
