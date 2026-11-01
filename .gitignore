@@ -16,13 +16,17 @@ ENV/
 .coverage
 htmlcov/
 
-# Local databases & model checkpoints (large files)
+# Local databases & model checkpoints
 *.duckdb.wal
 *.duckdb.tmp
+
+# Temporary captures & scratch files
+snap_*.png
+*.log
+graphify-out/cache/
 
 # OS & Editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-

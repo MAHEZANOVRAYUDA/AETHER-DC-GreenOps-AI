@@ -29,9 +29,21 @@ class MedallionEngine:
     def __init__(self, db_path: Optional[Path] = None):
         self.db_path = str(db_path or get_duckdb_path())
 
-    def _get_connection(self) -> duckdb.DuckDBPyConnection:
-        """Returns a DuckDB connection."""
-        return duckdb.connect(self.db_path)
+    def _get_connection(self, read_only: bool = False) -> duckdb.DuckDBPyConnection:
+        """Returns a DuckDB connection with retry handling for concurrency safety."""
+        import time
+        for attempt in range(3):
+            try:
+                return duckdb.connect(self.db_path, read_only=read_only)
+            except duckdb.IOException:
+                if attempt == 2:
+                    if not read_only:
+                        try:
+                            return duckdb.connect(self.db_path, read_only=True)
+                        except Exception:
+                            pass
+                    raise
+                time.sleep(0.06)
 
     def ingest_event(self, raw_payload: Dict[str, Any]) -> Tuple[bool, str]:
         """Ingests a single raw telemetry event via Pydantic v2 contract gate.
@@ -54,9 +66,9 @@ class MedallionEngine:
             # Pydantic v2 Strict Validation
             contract = TelemetryEventContract(**payload_copy)
 
-            # Insert into Bronze
+            # Insert into Bronze with Idempotent Guarantee
             con.execute("""
-                INSERT INTO bronze_telemetry_events (
+                INSERT OR REPLACE INTO bronze_telemetry_events (
                     event_id, timestamp, rack_id, datacenter_region, server_type,
                     cooling_type, time_of_day, workload_intensity, cpu_utilization,
                     memory_utilization, network_throughput_gbps, inlet_temperature_c,
@@ -183,7 +195,7 @@ class MedallionEngine:
 
     def get_silver_features(self, rack_id: Optional[str] = None, limit: int = 200) -> pd.DataFrame:
         """Retrieves enriched silver layer features with rolling windows."""
-        con = self._get_connection()
+        con = self._get_connection(read_only=True)
         try:
             if rack_id:
                 query = "SELECT * FROM silver_enriched_telemetry WHERE rack_id = ? ORDER BY timestamp DESC LIMIT ?"
@@ -205,7 +217,7 @@ class MedallionEngine:
         limit: int = 50,
     ) -> pd.DataFrame:
         """Retrieves filtered incident predictions queue for Finnova Master-Detail view."""
-        con = self._get_connection()
+        con = self._get_connection(read_only=True)
         try:
             sql = "SELECT * FROM gold_incident_predictions WHERE incident_status != 'Resolved'"
             params = []
@@ -235,7 +247,7 @@ class MedallionEngine:
 
     def get_dlq_events(self, limit: int = 50) -> pd.DataFrame:
         """Retrieves Dead-Letter Queue corrupted events."""
-        con = self._get_connection()
+        con = self._get_connection(read_only=True)
         try:
             return con.execute(
                 "SELECT * FROM dlq_corrupted_events ORDER BY ingested_at DESC LIMIT ?",
@@ -246,7 +258,7 @@ class MedallionEngine:
 
     def get_facility_kpis(self) -> Dict[str, Any]:
         """Calculates reactive KPIs for the 4 Finnova Bento Cards."""
-        con = self._get_connection()
+        con = self._get_connection(read_only=True)
         try:
             # Active alerts count & DLQ count
             alerts_cnt = con.execute(
@@ -307,9 +319,18 @@ class MedallionEngine:
             con.close()
 
     def remediate_incident(self, incident_id: str, new_target_pue: float = 1.16) -> bool:
-        """Executes counterfactual SRE remediation on an active incident."""
-        con = self._get_connection()
+        """Executes counterfactual SRE remediation on an active incident and logs audit trail."""
+        con = self._get_connection(read_only=False)
         try:
+            con.execute("""
+                CREATE TABLE IF NOT EXISTS mlops_remediation_audit_log (
+                    remediation_id VARCHAR PRIMARY KEY,
+                    remediated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    incident_id VARCHAR NOT NULL,
+                    target_pue DOUBLE NOT NULL,
+                    action_summary VARCHAR NOT NULL
+                );
+            """)
             con.execute("""
                 UPDATE gold_incident_predictions
                 SET incident_status = 'Resolved',
@@ -318,6 +339,11 @@ class MedallionEngine:
                     recommended_action = 'Remediated: Liquid loop pressure normalized and workload rebalanced'
                 WHERE incident_id = ?
             """, [new_target_pue, incident_id])
+            rem_id = f"REM-{uuid.uuid4().hex[:6].upper()}"
+            con.execute("""
+                INSERT INTO mlops_remediation_audit_log (remediation_id, incident_id, target_pue, action_summary)
+                VALUES (?, ?, ?, 'Liquid loop pressure normalized and workload rebalanced')
+            """, [rem_id, incident_id, new_target_pue])
             return True
         finally:
             con.close()
@@ -332,7 +358,7 @@ class MedallionEngine:
         delta_rmse: float,
     ) -> str:
         """Records a Zero-Downtime Model Hot-Swap in the audit log."""
-        con = self._get_connection()
+        con = self._get_connection(read_only=False)
         try:
             log_id = f"SWAP-{uuid.uuid4().hex[:6].upper()}"
             con.execute("""
@@ -347,7 +373,7 @@ class MedallionEngine:
 
     def get_hotswap_audit_logs(self, limit: int = 20) -> pd.DataFrame:
         """Retrieves model hot-swap audit logs."""
-        con = self._get_connection()
+        con = self._get_connection(read_only=True)
         try:
             return con.execute(
                 "SELECT * FROM mlops_model_audit_log ORDER BY swapped_at DESC LIMIT ?",

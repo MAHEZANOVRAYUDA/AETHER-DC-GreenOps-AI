@@ -1,51 +1,70 @@
 """Finnova Top Navigation, Action Header & 4 Asymmetric Bento KPI Cards.
 
 Implements pixel-accurate Finnova visual components:
-- Top Floating Pill Navbar
+- Top Floating Pill Navbar (Brand Left, Center Dark Capsule, Right Icon Cluster & Avatar)
 - Action Row with Scenario Injector
-- Bento Card 1: Thermal Alerts + Server Rack Thermal Health Bar
+- Bento Card 1: Thermal Alerts + Server Rack Thermal Health 3-Segment Bar
 - Bento Card 2: Facility Power & PUE + 7 Vertical Gradient Bars (#5B4FE9 -> #DFDCFF)
 - Bento Card 3: PSI Drift + Connected Node-Line Sparkline (o-o-o)
-- Bento Card 4: Dynamic Model Regime + 3 Vertical Mini-Cards + Integrated Hot-Swap Now CTA
+- Bento Card 4: Dynamic Model Regime + 3 Side-by-Side Mini-Cards + Integrated Hot-Swap
 """
 
+import textwrap
 from typing import Any, Dict
 import streamlit as st
 
 
-def render_top_navbar(runtime_mode_label: str = "Cloud Stream"):
-    """Renders Zone 1: Brand & Status Header."""
+def render_brand_header(alert_count: int = 54):
+    """Renders Zone 1 Left: Brand Logo, Name, Badge, and Counter Pill."""
+    html = textwrap.dedent(f"""
+    <div class="finnova-brand-group">
+        <div class="finnova-brand-icon">⚡</div>
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="finnova-brand-title">AETHER-DC</span>
+                <span class="finnova-badge-capsule">GreenOps AI</span>
+                <span style="font-size: 0.72rem; color: #8E92BC; font-weight: 600;">v2.4.0</span>
+            </div>
+            <div class="finnova-brand-subtitle">Autonomous Green AI Data Center</div>
+        </div>
+        <div class="finnova-counter-pill" title="Total Active Telemetry Alerts">{alert_count}</div>
+    </div>
+    """).strip()
+    st.html(html)
+
+
+def render_nav_right_cluster(runtime_mode_label: str = "Cloud Stream"):
+    """Renders Zone 1 Right: Icon Cluster, Status Chips, and User Avatar."""
     is_docker = "Docker" in runtime_mode_label
     status_bg = "#E6F8F5" if is_docker else "#EFEFFC"
     status_color = "#12A594" if is_docker else "#5B4FE9"
     status_dot = "🟢" if is_docker else "🟣"
 
-    html = f"""
-    <div class="finnova-navbar-container">
-        <div class="finnova-brand">
-            <div class="finnova-brand-logo">AETHER-DC</div>
-            <span class="finnova-brand-badge">GreenOps AI</span>
-            <span style="font-size: 0.75rem; color: #6E7191; font-weight: 500;">v2.4.0</span>
-        </div>
-
-        <div class="finnova-nav-right">
-            <div class="finnova-status-pill" style="background: {status_bg}; color: {status_color}; border-color: {status_color}33;">
+    html = textwrap.dedent(f"""
+    <div style="display: flex; justify-content: flex-end; align-items: center; width: 100%;">
+        <div class="finnova-nav-cluster">
+            <div class="finnova-status-chip" style="background: {status_bg}; color: {status_color}; border-color: {status_color}33;">
                 <span>{status_dot}</span>
                 <span>{runtime_mode_label}</span>
             </div>
-            <div class="finnova-status-pill" style="background: #FFF7EB; color: #D97706; border-color: #FDE68A;">
+            <div class="finnova-status-chip" style="background: #FFF7EB; color: #D97706; border-color: #FDE68A;">
                 <span>⚡</span>
-                <span>Prometheus :9090</span>
+                <span>:9090</span>
             </div>
-            <div class="finnova-avatar" title="Maheza Novrayuda (Lead Engineer)">MN</div>
+            <div class="finnova-icon-btn" title="System Notifications">
+                🔔
+                <span class="finnova-icon-dot"></span>
+            </div>
+            <div class="finnova-icon-btn" title="Runtime Configurations">⚙️</div>
+            <div class="finnova-avatar-circle" title="Maheza Novrayuda (Lead Engineer)">MN</div>
         </div>
     </div>
-    """
-    st.markdown(html, unsafe_allow_html=True)
+    """).strip()
+    st.html(html)
 
 
 def render_action_header(active_tab: str):
-    """Renders Zone 2: Action Header Row."""
+    """Renders Zone 2: Action Header Row (Title, Subtitle, and Back Button)."""
     descriptions = {
         "+ Telemetry Hub": "Real-time GPU rack telemetry, PUE efficiency, and MLOps drift control in one place.",
         "Lakehouse & DLQ": "DuckDB Medallion Lakehouse (Bronze -> Silver -> Gold) and Pydantic v2 Dead-Letter Queue.",
@@ -54,16 +73,20 @@ def render_action_header(active_tab: str):
         "Prometheus & Infra": "Production Prometheus telemetry metrics, scrape targets, and dual-mode architecture.",
     }
     desc = descriptions.get(active_tab, descriptions["+ Telemetry Hub"])
+    clean_title = active_tab.replace("+ ", "")
 
-    html = f"""
-    <div class="finnova-header-row">
-        <div>
-            <h1 class="finnova-page-title">{active_tab.replace('+ ', '')}</h1>
-            <p class="finnova-page-subtitle">{desc}</p>
+    html = textwrap.dedent(f"""
+    <div class="finnova-action-row">
+        <div class="finnova-header-left">
+            <div class="finnova-back-btn" title="Refresh Telemetry Stream">←</div>
+            <div>
+                <h1 class="finnova-page-title">{clean_title}</h1>
+                <p class="finnova-page-subtitle">{desc}</p>
+            </div>
         </div>
     </div>
-    """
-    st.markdown(html, unsafe_allow_html=True)
+    """).strip()
+    st.html(html)
 
 
 def render_bento_kpi_cards(
@@ -83,7 +106,7 @@ def render_bento_kpi_cards(
         alerts_count = kpis.get("active_alerts_count", 0)
         dlq_count = kpis.get("dlq_count", 0)
 
-        card1_html = f"""
+        card1_html = textwrap.dedent(f"""
         <div class="finnova-bento-card">
             <div>
                 <div class="finnova-bento-header">
@@ -97,25 +120,24 @@ def render_bento_kpi_cards(
                 </div>
             </div>
 
-            <!-- Server Rack Thermal Health Visual Bar -->
             <div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #6E7191; margin-bottom: 0.3rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.68rem; color: #6E7191; margin-bottom: 0.35rem; font-weight: 600;">
                     <span>Healthy (18)</span>
                     <span>Warning (4)</span>
                     <span>Critical (2)</span>
                 </div>
                 <div style="display: flex; height: 10px; border-radius: 9999px; overflow: hidden; background: #EAE8F6; gap: 2px;">
-                    <div style="flex: 18; background: #12A594; border-radius: 4px;"></div>
-                    <div style="flex: 4; background: #F59E0B; border-radius: 4px;"></div>
-                    <div style="flex: 2; background: #E5484D; border-radius: 4px;"></div>
+                    <div style="flex: 18; background: #12A594; border-radius: 4px;" title="18 Racks Nominal"></div>
+                    <div style="flex: 4; background: #F59E0B; border-radius: 4px;" title="4 Racks Warning"></div>
+                    <div style="flex: 2; background: #E5484D; border-radius: 4px;" title="2 Racks Critical Thermal Spike"></div>
                 </div>
-                <div style="font-size: 0.65rem; color: #8E92BC; margin-top: 0.35rem; text-align: center;">
+                <div style="font-size: 0.65rem; color: #8E92BC; margin-top: 0.4rem; text-align: center; font-weight: 500;">
                     24 Physical Racks · ASHRAE 32°C Cap
                 </div>
             </div>
         </div>
-        """
-        st.markdown(card1_html, unsafe_allow_html=True)
+        """).strip()
+        st.html(card1_html)
 
     # ----------------------------------------------------
     # BENTO CARD 2: Facility Power & Mean PUE + 7 Vertical Bars
@@ -127,9 +149,9 @@ def render_bento_kpi_cards(
 
         bars_html = ""
         for item in clusters[:7]:
-            lbl = item.get("cluster_label", "RACK")[-7:]
+            lbl = item.get("cluster_label", "RACK")[-6:]
             pue_val = float(item.get("cluster_pue", 1.20))
-            norm_h = int(max(20, min(65, (pue_val - 1.0) * 100)))
+            norm_h = int(max(18, min(65, (pue_val - 1.0) * 95)))
             bars_html += f"""
             <div class="finnova-bar-wrapper">
                 <div class="finnova-bar-pillar" style="height: {norm_h}px;" title="{item.get('cluster_label')}: {pue_val:.2f} PUE"></div>
@@ -137,7 +159,7 @@ def render_bento_kpi_cards(
             </div>
             """
 
-        card2_html = f"""
+        card2_html = textwrap.dedent(f"""
         <div class="finnova-bento-card">
             <div>
                 <div class="finnova-bento-header">
@@ -147,20 +169,19 @@ def render_bento_kpi_cards(
                 <div class="finnova-bento-metric">{mean_pue:.2f} PUE</div>
                 <div class="finnova-bento-delta delta-success">
                     <span>↓ 4.2%</span>
-                    <span style="color: #6E7191; font-weight: 500;">· {total_kw:.1f} kW total load</span>
+                    <span style="color: #6E7191; font-weight: 500;">· {total_kw:.1f} kW load</span>
                 </div>
             </div>
 
-            <!-- 7 Vertical Gradient Bars -->
             <div class="finnova-bars-container">
                 {bars_html}
             </div>
         </div>
-        """
-        st.markdown(card2_html, unsafe_allow_html=True)
+        """).strip()
+        st.html(card2_html)
 
     # ----------------------------------------------------
-    # BENTO CARD 3: Feature Drift (PSI) & Latency + Node-Line Sparkline
+    # BENTO CARD 3: Feature Drift (PSI) & Latency + Sparkline
     # ----------------------------------------------------
     with cols[2]:
         max_psi = drift_data.get("max_psi", 0.084)
@@ -168,24 +189,23 @@ def render_bento_kpi_cards(
         psi_delta_class = "delta-danger" if is_drift else "delta-success"
         psi_status = "Critical Drift" if is_drift else "Stable Baseline"
 
-        # SVG Connected Node-Line Sparkline (o-o-o)
         sparkline_svg = """
-        <svg viewBox="0 0 200 45" style="width: 100%; height: 45px; overflow: visible;">
+        <svg viewBox="0 0 200 45" style="width: 100%; height: 42px; overflow: visible;">
             <defs>
                 <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#5B4FE9" stop-opacity="0.25"/>
+                    <stop offset="0%" stop-color="#5B4FE9" stop-opacity="0.3"/>
                     <stop offset="100%" stop-color="#5B4FE9" stop-opacity="0.0"/>
                 </linearGradient>
             </defs>
-            <path d="M 5,32 Q 35,15 70,26 T 135,12 T 195,18" fill="none" stroke="#5B4FE9" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M 5,32 Q 35,14 70,25 T 135,10 T 195,16" fill="none" stroke="#5B4FE9" stroke-width="2.5" stroke-linecap="round"/>
             <circle cx="5" cy="32" r="3.5" fill="#FFFFFF" stroke="#5B4FE9" stroke-width="2.5"/>
-            <circle cx="70" cy="26" r="3.5" fill="#FFFFFF" stroke="#5B4FE9" stroke-width="2.5"/>
-            <circle cx="135" cy="12" r="3.5" fill="#FFFFFF" stroke="#5B4FE9" stroke-width="2.5"/>
-            <circle cx="195" cy="18" r="4.5" fill="#5B4FE9" stroke="#FFFFFF" stroke-width="2.5"/>
+            <circle cx="70" cy="25" r="3.5" fill="#FFFFFF" stroke="#5B4FE9" stroke-width="2.5"/>
+            <circle cx="135" cy="10" r="3.5" fill="#FFFFFF" stroke="#5B4FE9" stroke-width="2.5"/>
+            <circle cx="195" cy="16" r="4.5" fill="#5B4FE9" stroke="#FFFFFF" stroke-width="2"/>
         </svg>
         """
 
-        card3_html = f"""
+        card3_html = textwrap.dedent(f"""
         <div class="finnova-bento-card">
             <div>
                 <div class="finnova-bento-header">
@@ -199,29 +219,27 @@ def render_bento_kpi_cards(
                 </div>
             </div>
 
-            <!-- Connected Node-Line Sparkline -->
-            <div style="margin-top: 0.5rem;">
+            <div style="margin-top: 0.4rem;">
                 {sparkline_svg}
-                <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #8E92BC; margin-top: 0.2rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #8E92BC; margin-top: 0.15rem; font-weight: 600;">
                     <span>T-4h</span>
                     <span>T-2h</span>
                     <span>Live Window</span>
                 </div>
             </div>
         </div>
-        """
-        st.markdown(card3_html, unsafe_allow_html=True)
+        """).strip()
+        st.html(card3_html)
 
     # ----------------------------------------------------
-    # BENTO CARD 4: Dynamic Model & Cooling Regime + Hot-Swap CTA
+    # BENTO CARD 4: Dynamic Model & Cooling Regime
     # ----------------------------------------------------
     with cols[3]:
         is_lgbm = "lgbm" in active_champion
         f1_pct = eval_metrics.get("champion_f1", 0.984) * 100.0
-        # Dynamic annual cost savings calculation
         annual_savings = max(12000.0, kpis.get("total_power_kw", 480.0) * (kpis.get("mean_pue", 1.25) - 1.15) * 0.14 * 8760)
 
-        card4_html = f"""
+        card4_html = textwrap.dedent(f"""
         <div class="finnova-bento-card">
             <div>
                 <div class="finnova-bento-header">
@@ -235,7 +253,6 @@ def render_bento_kpi_cards(
                 </div>
             </div>
 
-            <!-- 3 Side-by-Side Mini-Cards -->
             <div>
                 <div class="finnova-mini-cards-row">
                     <div class="finnova-mini-card {'active-challenger' if is_lgbm else ''}">
@@ -253,5 +270,5 @@ def render_bento_kpi_cards(
                 </div>
             </div>
         </div>
-        """
-        st.markdown(card4_html, unsafe_allow_html=True)
+        """).strip()
+        st.html(card4_html)
